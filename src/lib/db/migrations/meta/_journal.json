@@ -8,6 +8,13 @@
       "when": 1741889078215,
       "tag": "0000_pretty_rattler",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1742827023382,
+      "tag": "0001_rich_mister_sinister",
+      "breakpoints": true
     }
   ]
 }

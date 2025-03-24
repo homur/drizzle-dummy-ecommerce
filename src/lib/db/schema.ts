@@ -77,3 +77,16 @@ export const cartItems = pgTable("cart_items", {
     .references(() => products.id),
   quantity: integer("quantity").notNull().default(1),
 });
+
+// CMS Users table
+export const cmsUsers = pgTable("cms_users", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: text("password").notNull(),
+  role: text("role").notNull().default("editor"), // admin, editor, etc.
+  isActive: boolean("is_active").notNull().default(true),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
