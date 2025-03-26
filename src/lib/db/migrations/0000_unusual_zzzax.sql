@@ -13,6 +13,19 @@ CREATE TABLE "carts" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "cms_users" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" text NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"password" text NOT NULL,
+	"role" text DEFAULT 'editor' NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL,
+	"last_login" timestamp,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "cms_users_email_unique" UNIQUE("email")
+);
+--> statement-breakpoint
 CREATE TABLE "order_items" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"order_id" integer NOT NULL,
@@ -32,13 +45,18 @@ CREATE TABLE "orders" (
 --> statement-breakpoint
 CREATE TABLE "products" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"description" text,
+	"name" varchar(255) NOT NULL,
+	"description" text NOT NULL,
 	"price" numeric(10, 2) NOT NULL,
-	"inventory" integer DEFAULT 0 NOT NULL,
-	"image_url" text,
+	"inventory" integer NOT NULL,
+	"image_url" varchar(255) NOT NULL,
+	"image_key" varchar(255),
+	"image_width" numeric(10, 0),
+	"image_height" numeric(10, 0),
+	"image_format" varchar(10),
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"is_active" boolean DEFAULT true NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "users" (

@@ -1,6 +1,6 @@
 {
-  "id": "d1c129d2-dcba-49e4-b017-b27fbf2efd92",
-  "prevId": "81020d44-eb8a-4ccb-9844-2ff3deabf6f3",
+  "id": "fa7e2134-9a99-48a6-b8bd-f7d3410ccc6c",
+  "prevId": "45b06e23-54c0-4b60-8f14-4c157ca05fd6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -355,7 +355,7 @@
         },
         "name": {
           "name": "name",
-          "type": "text",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": true
         },
@@ -363,7 +363,7 @@
           "name": "description",
           "type": "text",
           "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "price": {
           "name": "price",
@@ -375,12 +375,35 @@
           "name": "inventory",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "default": 0
+          "notNull": true
         },
         "image_url": {
           "name": "image_url",
-          "type": "text",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_width": {
+          "name": "image_width",
+          "type": "numeric(10, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_height": {
+          "name": "image_height",
+          "type": "numeric(10, 0)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_format": {
+          "name": "image_format",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false
         },
@@ -397,6 +420,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "is_highlighted": {
+          "name": "is_highlighted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {},

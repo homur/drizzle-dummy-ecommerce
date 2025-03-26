@@ -1,24 +1,50 @@
-import Image from "next/image";
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Product } from "@/types/product";
+import { HeroSection } from "@/components/home/HeroSection";
+import { FeaturedProducts } from "@/components/home/FeaturedProducts";
+import { NewsletterSection } from "@/components/home/NewsletterSection";
+import { RootLayout } from "@/components/layout/RootLayout";
 
 export default function Home() {
+  const [highlightedProducts, setHighlightedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const [allProductsResponse, highlightedResponse] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/products?highlighted=true"),
+        ]);
+
+        const highlighted = await highlightedResponse.json();
+
+        setHighlightedProducts(highlighted);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            <Link href="/cms">CMS</Link>
-          </li>
-        </ol>
-      </main>
-    </div>
+    <RootLayout>
+      <HeroSection products={highlightedProducts} />
+      <FeaturedProducts products={highlightedProducts} />
+      <NewsletterSection />
+    </RootLayout>
   );
 }

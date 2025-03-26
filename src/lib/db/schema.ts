@@ -23,13 +23,19 @@ export const users = pgTable("users", {
 // Products table
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
-  inventory: integer("inventory").notNull().default(0),
-  imageUrl: text("image_url"),
+  inventory: integer("inventory").notNull(),
+  imageUrl: varchar("image_url", { length: 255 }).notNull(),
+  imageKey: varchar("image_key", { length: 255 }), // Store the storage key
+  imageWidth: decimal("image_width", { precision: 10, scale: 0 }),
+  imageHeight: decimal("image_height", { precision: 10, scale: 0 }),
+  imageFormat: varchar("image_format", { length: 10 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  isHighlighted: boolean("is_highlighted").default(false).notNull(),
 });
 
 // Orders table

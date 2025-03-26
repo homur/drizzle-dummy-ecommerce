@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "is_highlighted" boolean DEFAULT false NOT NULL;
