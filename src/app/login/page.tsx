@@ -2,25 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import Link from "next/link";
 
-export default function CMSLogin() {
+export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const response = await fetch("/api/cms/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -31,25 +30,15 @@ export default function CMSLogin() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        throw new Error(data.error || "Failed to log in");
       }
 
-      // Store the token in a cookie
-      Cookies.set("cms_token", data.token, {
-        expires: 1, // 1 day
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-
-      // Store user data in localStorage (for UI purposes only)
-      localStorage.setItem("cms_user", JSON.stringify(data.user));
-
-      // Redirect to CMS dashboard
-      router.push("/cms/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      // Redirect to home page on success
+      router.push("/");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to log in");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -58,22 +47,19 @@ export default function CMSLogin() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to CMS
+            Sign in to your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{" "}
             <Link
-              href="/cms/register"
+              href="/register"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              create a new CMS account
+              create a new account
             </Link>
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <label htmlFor="email" className="sr-only">
@@ -113,13 +99,17 @@ export default function CMSLogin() {
             </div>
           </div>
 
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
+
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
           </div>
         </form>

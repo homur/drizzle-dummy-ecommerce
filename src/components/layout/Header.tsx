@@ -1,67 +1,51 @@
+"use client";
+
 import Link from "next/link";
-import { ShoppingCartIcon } from "@heroicons/react/24/outline";
+import { ShoppingCart, User } from "lucide-react";
+import { useCart } from "@/hooks/use-cart";
 
 const navigation = [
   { name: "Home", href: "/" },
-  { name: "Products", href: "/products" },
+  { name: "Designs", href: "/products" },
   { name: "Categories", href: "/categories" },
   { name: "About", href: "/about" },
 ];
 
-export const Header = () => {
+export function Header() {
+  const cart = useCart();
+
   return (
-    <header className="bg-white">
-      <nav
-        className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8"
-        aria-label="Global"
-      >
-        <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5">
-            <span className="text-2xl font-bold text-gray-900">SmartHome</span>
-          </Link>
-        </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-          >
-            <span className="sr-only">Open main menu</span>
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-12">
-          {navigation.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600"
-            >
-              {item.name}
+    <header className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link href="/" className="text-xl font-bold text-gray-900">
+              Drizzle Dummy
             </Link>
-          ))}
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/profile"
+              className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100"
+              title="Profile"
+            >
+              <User className="h-6 w-6" />
+            </Link>
+            <Link
+              href="/cart"
+              className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 relative"
+              title="Cart"
+            >
+              <ShoppingCart className="h-6 w-6" />
+              {cart.items.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {cart.items.length}
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-1 items-center justify-end gap-x-6">
-          <Link
-            href="/cart"
-            className="rounded-full bg-white p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-          >
-            <span className="sr-only">View cart</span>
-            <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" />
-          </Link>
-        </div>
-      </nav>
+      </div>
     </header>
   );
-};
+}

@@ -9,15 +9,21 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const highlighted = searchParams.get("highlighted");
 
-    let query = db.select().from(products);
-
-    if (highlighted === "true") {
-      query = query.where(eq(products.isHighlighted, true));
-    }
+    // Only fetch highlighted products if specifically requested
+    const query =
+      highlighted === "true"
+        ? db.select().from(products).where(eq(products.isHighlighted, true))
+        : db.select().from(products);
 
     const allProducts = await query;
-    console.log("API Response:", "allProducts");
-    return NextResponse.json(allProducts);
+
+    // Add cache headers for better performance
+    const response = NextResponse.json(allProducts);
+    response.headers.set(
+      "Cache-Control",
+      "public, s-maxage=10, stale-while-revalidate=59"
+    );
+    return response;
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(

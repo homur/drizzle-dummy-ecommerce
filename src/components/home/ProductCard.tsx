@@ -16,6 +16,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           width={400}
           height={300}
           className="h-full w-full object-cover object-center group-hover:opacity-75"
+          quality={85}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
         />
       </div>
       <h3 className="mt-4 text-sm text-gray-700">

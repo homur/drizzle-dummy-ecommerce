@@ -16,10 +16,10 @@ export const FeaturedProducts = ({ products }: FeaturedProductsProps) => {
         <div className="flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-gray-900">
-              Featured Products
+              Featured Designs
             </h2>
             <p className="mt-2 text-sm text-gray-500">
-              Discover our handpicked selection of premium smart home devices
+              Check out our most popular designs that are making waves
             </p>
           </div>
         </div>

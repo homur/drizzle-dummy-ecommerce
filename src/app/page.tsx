@@ -1,44 +1,31 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { NewsletterSection } from "@/components/home/NewsletterSection";
 import { RootLayout } from "@/components/layout/RootLayout";
+import { headers } from "next/headers";
 
-export default function Home() {
-  const [highlightedProducts, setHighlightedProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+async function getHighlightedProducts() {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const [allProductsResponse, highlightedResponse] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/products?highlighted=true"),
-        ]);
+  const response = await fetch(
+    `${protocol}://${host}/api/products?highlighted=true`,
+    {
+      next: { revalidate: 60 }, // Revalidate every 60 seconds
+    }
+  );
 
-        const highlighted = await highlightedResponse.json();
-
-        setHighlightedProducts(highlighted);
-      } catch (error) {
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
   }
+
+  return response.json();
+}
+
+export default async function Home() {
+  const highlightedProducts = await getHighlightedProducts();
 
   return (
     <RootLayout>

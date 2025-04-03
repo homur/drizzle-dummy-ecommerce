@@ -1,35 +1,72 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { jwtVerify } from "jose";
+
+// Define public paths that don't require authentication
+const publicPaths = ["/auth/login", "/auth/register"];
+
+// Define paths that require authentication
+const protectedPaths = ["/profile", "/orders", "/cart"];
 
 export async function middleware(request: NextRequest) {
-  // Skip middleware for login page
-  if (request.nextUrl.pathname === "/cms/login") {
+  const { pathname } = request.nextUrl;
+  console.log("Middleware processing path:", pathname);
+
+  // Skip middleware for API routes
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get("cms_token")?.value;
+  // Check if the path is public
+  const isPublicPath = publicPaths.includes(pathname);
+  // Check if the path requires authentication
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
 
-  if (!token) {
-    // Redirect to login if no token is present
-    return NextResponse.redirect(new URL("/cms/login", request.url));
-  }
+  // Get the session ID from the cookie
+  const sessionId = request.cookies.get("sessionId")?.value;
+  console.log("Session ID present:", !!sessionId);
 
   try {
-    // Verify the token
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || "your-secret-key"
-    );
-    await jwtVerify(token, secret);
+    // If user is authenticated and tries to access public paths, redirect to home
+    if (isPublicPath && sessionId) {
+      console.log(
+        "Authenticated user trying to access public path, redirecting to home"
+      );
+      return NextResponse.redirect(new URL("/", request.url));
+    }
 
+    // If user is not authenticated and tries to access protected paths, redirect to login
+    if (isProtectedPath && !sessionId) {
+      console.log(
+        "Unauthenticated user trying to access protected path, redirecting to login"
+      );
+      const loginUrl = new URL("/auth/login", request.url);
+      // Add the current path as a redirect parameter
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    console.log("Middleware allowing access to:", pathname);
     return NextResponse.next();
   } catch (error) {
-    // Token is invalid or expired
-    console.error("Token is invalid or expired:", error);
-    return NextResponse.redirect(new URL("/cms/login", request.url));
+    console.error("Middleware error:", error);
+    // If there's an error, redirect to login
+    const response = NextResponse.redirect(new URL("/auth/login", request.url));
+    response.cookies.delete("sessionId");
+    return response;
   }
 }
 
+// Configure which paths the middleware should run on
 export const config = {
-  matcher: ["/cms", "/cms/:path*"],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
