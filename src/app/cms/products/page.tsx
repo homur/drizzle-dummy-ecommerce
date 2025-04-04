@@ -35,7 +35,7 @@ export default function ProductsPage() {
     try {
       const response = await fetch("/api/products");
       const data = await response.json();
-      const productsWithNumberPrices = data.map((product: Product) => ({
+      const productsWithNumberPrices = data.items.map((product: Product) => ({
         ...product,
         price: Number(product.price),
         inventory: Number(product.inventory),

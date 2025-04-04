@@ -21,7 +21,8 @@ async function getHighlightedProducts() {
     throw new Error("Failed to fetch products");
   }
 
-  return response.json();
+  const data = await response.json();
+  return data.items || [];
 }
 
 export default async function Home() {

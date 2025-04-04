@@ -4,9 +4,11 @@ import { Header } from "@/components/layout/Header";
 import { useCart } from "@/hooks/use-cart";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
   const cart = useCart();
+  const router = useRouter();
 
   const total = cart.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -104,11 +106,9 @@ export default function CartPage() {
                       Continue Shopping
                     </Link>
                     <button
-                      onClick={() => {
-                        // TODO: Implement checkout
-                        alert("Checkout functionality coming soon!");
-                      }}
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                      onClick={() => router.push("/checkout")}
+                      disabled={cart.items.length === 0}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                     >
                       Proceed to Checkout
                     </button>

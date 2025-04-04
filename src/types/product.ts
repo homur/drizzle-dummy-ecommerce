@@ -8,4 +8,5 @@ export interface Product {
   isHighlighted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  slug: string;
 }

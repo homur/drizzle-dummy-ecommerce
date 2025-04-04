@@ -18,12 +18,7 @@ export async function POST() {
     const response = NextResponse.json({ success: true });
 
     // Delete the session cookie
-    response.cookies.delete("sessionId", {
-      path: "/",
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-    });
+    response.cookies.delete("sessionId");
 
     return response;
   } catch (error) {

@@ -14,6 +14,7 @@ interface Product {
   imageUrl: string;
   inventory: number;
   category?: string;
+  slug: string;
 }
 
 export default function ProductDetailPage() {
@@ -27,7 +28,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await fetch(`/api/products/${params.id}`);
+        const response = await fetch(`/api/products/${params.slug}`);
         if (!response.ok) {
           throw new Error("Failed to fetch product");
         }
@@ -45,7 +46,7 @@ export default function ProductDetailPage() {
     };
 
     fetchProduct();
-  }, [params.id]);
+  }, [params.slug]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -121,7 +122,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Quantity Selector */}
-                <div className="flex items-center space-x-4 mb-6">
+                <div className="mb-6">
                   <label
                     htmlFor="quantity"
                     className="text-sm font-medium text-gray-700"

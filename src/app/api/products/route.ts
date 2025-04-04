@@ -2,28 +2,36 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
+import { generateSlug } from "@/lib/utils/slug";
+import { Product } from "@/types/product";
+
+const ITEMS_PER_PAGE = 12;
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const highlighted = searchParams.get("highlighted");
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "12");
+    const offset = (page - 1) * limit;
 
-    // Only fetch highlighted products if specifically requested
-    const query =
-      highlighted === "true"
-        ? db.select().from(products).where(eq(products.isHighlighted, true))
-        : db.select().from(products);
+    const [totalCount, items] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(products),
+      db
+        .select()
+        .from(products)
+        .limit(limit)
+        .offset(offset)
+        .orderBy(desc(products.createdAt)),
+    ]);
 
-    const allProducts = await query;
-
-    // Add cache headers for better performance
-    const response = NextResponse.json(allProducts);
-    response.headers.set(
-      "Cache-Control",
-      "public, s-maxage=10, stale-while-revalidate=59"
-    );
-    return response;
+    return NextResponse.json({
+      items,
+      total: Number(totalCount[0].count),
+      page,
+      totalPages: Math.ceil(Number(totalCount[0].count) / limit),
+      limit,
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(
@@ -42,9 +50,17 @@ export async function POST(request: Request) {
       ? data.products
       : [data];
 
+    // Add slugs to products
+    const productsWithSlugs = productsToInsert.map(
+      (product: Partial<Product>) => ({
+        ...product,
+        slug: generateSlug(product.name || ""),
+      })
+    );
+
     const newProducts = await db
       .insert(products)
-      .values(productsToInsert)
+      .values(productsWithSlugs)
       .returning();
 
     return NextResponse.json(newProducts, { status: 201 });

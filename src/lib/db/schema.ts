@@ -32,6 +32,7 @@ export const products = pgTable("products", {
   imageWidth: decimal("image_width", { precision: 10, scale: 0 }),
   imageHeight: decimal("image_height", { precision: 10, scale: 0 }),
   imageFormat: varchar("image_format", { length: 10 }),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
@@ -41,26 +42,27 @@ export const products = pgTable("products", {
 // Orders table
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id")
-    .notNull()
-    .references(() => users.id),
-  status: text("status").notNull().default("pending"),
+  userId: integer("user_id").references(() => users.id),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  status: text("status").notNull().default("pending"),
+  shippingName: text("shipping_name").notNull(),
+  shippingEmail: text("shipping_email").notNull(),
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: text("shipping_city").notNull(),
+  shippingPostalCode: text("shipping_postal_code").notNull(),
+  shippingCountry: text("shipping_country").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Order items table
 export const orderItems = pgTable("order_items", {
   id: serial("id").primaryKey(),
-  orderId: integer("order_id")
-    .notNull()
-    .references(() => orders.id),
-  productId: integer("product_id")
-    .notNull()
-    .references(() => products.id),
+  orderId: integer("order_id").references(() => orders.id),
+  productId: integer("product_id").references(() => products.id),
   quantity: integer("quantity").notNull(),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Cart table

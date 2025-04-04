@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Define public paths that don't require authentication
-const publicPaths = ["/auth/login", "/auth/register"];
+const publicPaths = ["/login", "/register", "/orders/lookup"];
 
 // Define paths that require authentication
-const protectedPaths = ["/profile", "/orders", "/cart"];
+const protectedPaths = ["/profile", "/orders"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -19,9 +19,17 @@ export async function middleware(request: NextRequest) {
   // Check if the path is public
   const isPublicPath = publicPaths.includes(pathname);
   // Check if the path requires authentication
-  const isProtectedPath = protectedPaths.some((path) =>
-    pathname.startsWith(path)
-  );
+  const isProtectedPath = protectedPaths.some((path) => {
+    // For /orders, only match exact path or /orders/ followed by something other than 'lookup'
+    if (path === "/orders") {
+      return (
+        pathname === path ||
+        (pathname.startsWith("/orders/") &&
+          !pathname.startsWith("/orders/lookup"))
+      );
+    }
+    return pathname.startsWith(path);
+  });
 
   // Get the session ID from the cookie
   const sessionId = request.cookies.get("sessionId")?.value;
@@ -41,7 +49,7 @@ export async function middleware(request: NextRequest) {
       console.log(
         "Unauthenticated user trying to access protected path, redirecting to login"
       );
-      const loginUrl = new URL("/auth/login", request.url);
+      const loginUrl = new URL("/login", request.url);
       // Add the current path as a redirect parameter
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
@@ -52,7 +60,7 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error("Middleware error:", error);
     // If there's an error, redirect to login
-    const response = NextResponse.redirect(new URL("/auth/login", request.url));
+    const response = NextResponse.redirect(new URL("/login", request.url));
     response.cookies.delete("sessionId");
     return response;
   }

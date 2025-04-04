@@ -1,6 +1,16 @@
 import { db } from "./index";
-import { products, cmsUsers, users } from "./schema";
+import {
+  products,
+  cmsUsers,
+  users,
+  cartItems,
+  carts,
+  orderItems,
+  orders,
+  sessions,
+} from "./schema";
 import bcrypt from "bcryptjs";
+import { generateSlug } from "../utils/slug";
 
 const dummyProducts = [
   {
@@ -10,6 +20,7 @@ const dummyProducts = [
     price: "299.99",
     inventory: 50,
     imageUrl: "https://picsum.photos/400/300?random=1",
+    slug: generateSlug("Wireless Noise-Cancelling Headphones"),
   },
   {
     name: "Smart Fitness Watch",
@@ -17,6 +28,7 @@ const dummyProducts = [
     price: "199.99",
     inventory: 75,
     imageUrl: "https://picsum.photos/400/300?random=2",
+    slug: generateSlug("Smart Fitness Watch"),
   },
   {
     name: "Ultra HD 4K Monitor",
@@ -24,6 +36,7 @@ const dummyProducts = [
     price: "449.99",
     inventory: 30,
     imageUrl: "https://picsum.photos/400/300?random=3",
+    slug: generateSlug("Ultra HD 4K Monitor"),
   },
   {
     name: "Mechanical Gaming Keyboard",
@@ -31,6 +44,7 @@ const dummyProducts = [
     price: "129.99",
     inventory: 100,
     imageUrl: "https://picsum.photos/400/300?random=4",
+    slug: generateSlug("Mechanical Gaming Keyboard"),
   },
   {
     name: "Wireless Gaming Mouse",
@@ -38,6 +52,7 @@ const dummyProducts = [
     price: "79.99",
     inventory: 150,
     imageUrl: "https://picsum.photos/400/300?random=5",
+    slug: generateSlug("Wireless Gaming Mouse"),
   },
   {
     name: "Portable Power Bank",
@@ -45,6 +60,7 @@ const dummyProducts = [
     price: "49.99",
     inventory: 200,
     imageUrl: "https://picsum.photos/400/300?random=6",
+    slug: generateSlug("Portable Power Bank"),
   },
   {
     name: "Smart Home Security Camera",
@@ -52,6 +68,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 80,
     imageUrl: "https://picsum.photos/400/300?random=7",
+    slug: generateSlug("Smart Home Security Camera"),
   },
   {
     name: "Bluetooth Speaker",
@@ -59,6 +76,7 @@ const dummyProducts = [
     price: "69.99",
     inventory: 120,
     imageUrl: "https://picsum.photos/400/300?random=8",
+    slug: generateSlug("Bluetooth Speaker"),
   },
   {
     name: "USB-C Hub",
@@ -66,6 +84,7 @@ const dummyProducts = [
     price: "39.99",
     inventory: 180,
     imageUrl: "https://picsum.photos/400/300?random=9",
+    slug: generateSlug("USB-C Hub"),
   },
   {
     name: "Wireless Charging Pad",
@@ -73,6 +92,7 @@ const dummyProducts = [
     price: "29.99",
     inventory: 250,
     imageUrl: "https://picsum.photos/400/300?random=10",
+    slug: generateSlug("Wireless Charging Pad"),
   },
   {
     name: "Smart LED Bulb",
@@ -80,6 +100,7 @@ const dummyProducts = [
     price: "24.99",
     inventory: 300,
     imageUrl: "https://picsum.photos/400/300?random=11",
+    slug: generateSlug("Smart LED Bulb"),
   },
   {
     name: "External SSD",
@@ -87,6 +108,7 @@ const dummyProducts = [
     price: "159.99",
     inventory: 60,
     imageUrl: "https://picsum.photos/400/300?random=12",
+    slug: generateSlug("External SSD"),
   },
   {
     name: "Smart Door Lock",
@@ -94,6 +116,7 @@ const dummyProducts = [
     price: "199.99",
     inventory: 40,
     imageUrl: "https://picsum.photos/400/300?random=13",
+    slug: generateSlug("Smart Door Lock"),
   },
   {
     name: "Wireless Earbuds",
@@ -101,6 +124,7 @@ const dummyProducts = [
     price: "149.99",
     inventory: 90,
     imageUrl: "https://picsum.photos/400/300?random=14",
+    slug: generateSlug("Wireless Earbuds"),
   },
   {
     name: "Smart Thermostat",
@@ -108,6 +132,7 @@ const dummyProducts = [
     price: "179.99",
     inventory: 45,
     imageUrl: "https://picsum.photos/400/300?random=15",
+    slug: generateSlug("Smart Thermostat"),
   },
   {
     name: "Gaming Headset",
@@ -115,6 +140,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 110,
     imageUrl: "https://picsum.photos/400/300?random=16",
+    slug: generateSlug("Gaming Headset"),
   },
   {
     name: "Smart Scale",
@@ -122,6 +148,7 @@ const dummyProducts = [
     price: "49.99",
     inventory: 85,
     imageUrl: "https://picsum.photos/400/300?random=17",
+    slug: generateSlug("Smart Scale"),
   },
   {
     name: "Portable Projector",
@@ -129,6 +156,7 @@ const dummyProducts = [
     price: "299.99",
     inventory: 25,
     imageUrl: "https://picsum.photos/400/300?random=18",
+    slug: generateSlug("Portable Projector"),
   },
   {
     name: "Smart Doorbell",
@@ -136,6 +164,7 @@ const dummyProducts = [
     price: "129.99",
     inventory: 70,
     imageUrl: "https://picsum.photos/400/300?random=19",
+    slug: generateSlug("Smart Doorbell"),
   },
   {
     name: "Wireless Mouse Pad",
@@ -143,6 +172,7 @@ const dummyProducts = [
     price: "39.99",
     inventory: 160,
     imageUrl: "https://picsum.photos/400/300?random=20",
+    slug: generateSlug("Wireless Mouse Pad"),
   },
   {
     name: "Smart Plug",
@@ -150,6 +180,7 @@ const dummyProducts = [
     price: "19.99",
     inventory: 400,
     imageUrl: "https://picsum.photos/400/300?random=21",
+    slug: generateSlug("Smart Plug"),
   },
   {
     name: "Portable Air Purifier",
@@ -157,6 +188,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 55,
     imageUrl: "https://picsum.photos/400/300?random=22",
+    slug: generateSlug("Portable Air Purifier"),
   },
   {
     name: "Smart Mirror",
@@ -164,6 +196,7 @@ const dummyProducts = [
     price: "199.99",
     inventory: 35,
     imageUrl: "https://picsum.photos/400/300?random=23",
+    slug: generateSlug("Smart Mirror"),
   },
   {
     name: "Wireless Keyboard",
@@ -171,6 +204,7 @@ const dummyProducts = [
     price: "59.99",
     inventory: 130,
     imageUrl: "https://picsum.photos/400/300?random=24",
+    slug: generateSlug("Wireless Keyboard"),
   },
   {
     name: "Smart Water Bottle",
@@ -178,6 +212,7 @@ const dummyProducts = [
     price: "79.99",
     inventory: 95,
     imageUrl: "https://picsum.photos/400/300?random=25",
+    slug: generateSlug("Smart Water Bottle"),
   },
   {
     name: "Portable Monitor",
@@ -185,6 +220,7 @@ const dummyProducts = [
     price: "249.99",
     inventory: 40,
     imageUrl: "https://picsum.photos/400/300?random=26",
+    slug: generateSlug("Portable Monitor"),
   },
   {
     name: "Smart Smoke Detector",
@@ -192,6 +228,7 @@ const dummyProducts = [
     price: "119.99",
     inventory: 65,
     imageUrl: "https://picsum.photos/400/300?random=27",
+    slug: generateSlug("Smart Smoke Detector"),
   },
   {
     name: "Wireless Charging Stand",
@@ -199,6 +236,7 @@ const dummyProducts = [
     price: "34.99",
     inventory: 180,
     imageUrl: "https://picsum.photos/400/300?random=28",
+    slug: generateSlug("Wireless Charging Stand"),
   },
   {
     name: "Smart Door Sensor",
@@ -206,6 +244,7 @@ const dummyProducts = [
     price: "29.99",
     inventory: 150,
     imageUrl: "https://picsum.photos/400/300?random=29",
+    slug: generateSlug("Smart Door Sensor"),
   },
   {
     name: "Portable Printer",
@@ -213,6 +252,7 @@ const dummyProducts = [
     price: "129.99",
     inventory: 45,
     imageUrl: "https://picsum.photos/400/300?random=30",
+    slug: generateSlug("Portable Printer"),
   },
   {
     name: "Smart Light Strip",
@@ -220,6 +260,7 @@ const dummyProducts = [
     price: "49.99",
     inventory: 120,
     imageUrl: "https://picsum.photos/400/300?random=31",
+    slug: generateSlug("Smart Light Strip"),
   },
   {
     name: "Wireless Webcam",
@@ -227,6 +268,7 @@ const dummyProducts = [
     price: "79.99",
     inventory: 85,
     imageUrl: "https://picsum.photos/400/300?random=32",
+    slug: generateSlug("Wireless Webcam"),
   },
   {
     name: "Smart Garage Opener",
@@ -234,6 +276,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 30,
     imageUrl: "https://picsum.photos/400/300?random=33",
+    slug: generateSlug("Smart Garage Opener"),
   },
   {
     name: "Portable Scanner",
@@ -241,6 +284,7 @@ const dummyProducts = [
     price: "159.99",
     inventory: 50,
     imageUrl: "https://picsum.photos/400/300?random=34",
+    slug: generateSlug("Portable Scanner"),
   },
   {
     name: "Smart Door Viewer",
@@ -248,6 +292,7 @@ const dummyProducts = [
     price: "69.99",
     inventory: 75,
     imageUrl: "https://picsum.photos/400/300?random=35",
+    slug: generateSlug("Smart Door Viewer"),
   },
   {
     name: "Wireless Microphone",
@@ -255,6 +300,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 60,
     imageUrl: "https://picsum.photos/400/300?random=36",
+    slug: generateSlug("Wireless Microphone"),
   },
   {
     name: "Smart Plant Pot",
@@ -262,6 +308,7 @@ const dummyProducts = [
     price: "79.99",
     inventory: 40,
     imageUrl: "https://picsum.photos/400/300?random=37",
+    slug: generateSlug("Smart Plant Pot"),
   },
   {
     name: "Portable Power Station",
@@ -269,6 +316,7 @@ const dummyProducts = [
     price: "299.99",
     inventory: 25,
     imageUrl: "https://picsum.photos/400/300?random=38",
+    slug: generateSlug("Portable Power Station"),
   },
   {
     name: "Smart Door Mat",
@@ -276,6 +324,7 @@ const dummyProducts = [
     price: "129.99",
     inventory: 35,
     imageUrl: "https://picsum.photos/400/300?random=39",
+    slug: generateSlug("Smart Door Mat"),
   },
   {
     name: "Wireless Presenter",
@@ -283,6 +332,7 @@ const dummyProducts = [
     price: "39.99",
     inventory: 200,
     imageUrl: "https://picsum.photos/400/300?random=40",
+    slug: generateSlug("Wireless Presenter"),
   },
   {
     name: "Smart Door Chain",
@@ -290,6 +340,7 @@ const dummyProducts = [
     price: "59.99",
     inventory: 80,
     imageUrl: "https://picsum.photos/400/300?random=41",
+    slug: generateSlug("Smart Door Chain"),
   },
   {
     name: "Portable Photo Printer",
@@ -297,6 +348,7 @@ const dummyProducts = [
     price: "149.99",
     inventory: 45,
     imageUrl: "https://picsum.photos/400/300?random=42",
+    slug: generateSlug("Portable Photo Printer"),
   },
   {
     name: "Smart Door Handle",
@@ -304,6 +356,7 @@ const dummyProducts = [
     price: "199.99",
     inventory: 30,
     imageUrl: "https://picsum.photos/400/300?random=43",
+    slug: generateSlug("Smart Door Handle"),
   },
   {
     name: "Wireless Trackpad",
@@ -311,6 +364,7 @@ const dummyProducts = [
     price: "79.99",
     inventory: 100,
     imageUrl: "https://picsum.photos/400/300?random=44",
+    slug: generateSlug("Wireless Trackpad"),
   },
   {
     name: "Smart Door Frame",
@@ -318,6 +372,7 @@ const dummyProducts = [
     price: "89.99",
     inventory: 50,
     imageUrl: "https://picsum.photos/400/300?random=45",
+    slug: generateSlug("Smart Door Frame"),
   },
   {
     name: "Portable Label Maker",
@@ -325,6 +380,7 @@ const dummyProducts = [
     price: "69.99",
     inventory: 90,
     imageUrl: "https://picsum.photos/400/300?random=46",
+    slug: generateSlug("Portable Label Maker"),
   },
   {
     name: "Smart Door Stop",
@@ -332,6 +388,7 @@ const dummyProducts = [
     price: "29.99",
     inventory: 150,
     imageUrl: "https://picsum.photos/400/300?random=47",
+    slug: generateSlug("Smart Door Stop"),
   },
   {
     name: "Wireless Number Pad",
@@ -339,13 +396,15 @@ const dummyProducts = [
     price: "49.99",
     inventory: 120,
     imageUrl: "https://picsum.photos/400/300?random=48",
+    slug: generateSlug("Wireless Number Pad"),
   },
   {
-    name: "Smart Door Mat",
+    name: "Smart Door Mat Pro",
     description: "Weight-sensing welcome mat",
     price: "99.99",
     inventory: 40,
     imageUrl: "https://picsum.photos/400/300?random=49",
+    slug: generateSlug("Smart Door Mat Pro"),
   },
   {
     name: "Portable Document Scanner",
@@ -353,11 +412,22 @@ const dummyProducts = [
     price: "179.99",
     inventory: 35,
     imageUrl: "https://picsum.photos/400/300?random=50",
+    slug: generateSlug("Portable Document Scanner"),
   },
 ];
 
 const seed = async () => {
   try {
+    // Clear existing data in the correct order
+    await db.delete(cartItems);
+    await db.delete(carts);
+    await db.delete(orderItems);
+    await db.delete(orders);
+    await db.delete(products);
+    await db.delete(sessions);
+    await db.delete(users);
+    await db.delete(cmsUsers);
+
     // Hash passwords
     const hashedPassword = await bcrypt.hash("1234", 10);
 

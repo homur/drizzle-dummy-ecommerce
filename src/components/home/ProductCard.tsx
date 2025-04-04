@@ -21,7 +21,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         />
       </div>
       <h3 className="mt-4 text-sm text-gray-700">
-        <Link href={`/products/${product.id}`}>
+        <Link href={`/products/${product.slug}`}>
           <span aria-hidden="true" className="absolute inset-0" />
           {product.name}
         </Link>

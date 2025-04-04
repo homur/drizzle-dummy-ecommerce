@@ -344,7 +344,7 @@ export default function UsersPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDelete(user.id)}
+                        onClick={() => handleDelete(user.id.toString())}
                         className="text-red-600 hover:text-red-700 font-medium"
                       >
                         Delete
