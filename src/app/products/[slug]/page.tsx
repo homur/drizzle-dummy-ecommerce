@@ -129,10 +129,10 @@ export default function ProductDetailPage() {
                   >
                     Quantity:
                   </label>
-                  <div className="flex items-center border border-gray-300 rounded-md">
+                  <div className="flex items-center">
                     <button
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="px-3 py-1 text-gray-600 hover:text-gray-900"
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-300 rounded-l-md"
                     >
                       -
                     </button>
@@ -153,13 +153,13 @@ export default function ProductDetailPage() {
                           )
                         )
                       }
-                      className="w-16 text-center border-x border-gray-300 py-1 text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      className="w-16 text-center border-y border-gray-300 py-1 text-gray-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
                       onClick={() =>
                         setQuantity(Math.min(product.inventory, quantity + 1))
                       }
-                      className="px-3 py-1 text-gray-600 hover:text-gray-900"
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-gray-900 border border-gray-300 rounded-r-md"
                     >
                       +
                     </button>
