@@ -43,14 +43,14 @@ export async function POST(request: Request) {
     }
 
     // Find user by email
-    const user = await db
+    const [foundUser] = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
-    if (!user || user.length === 0) {
-      console.log("User not found");
+    if (!foundUser) {
+      console.log("User not found during login attempt for:", email);
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
@@ -58,13 +58,21 @@ export async function POST(request: Request) {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user[0].password);
+    const isValidPassword = await bcrypt.compare(password, foundUser.password);
 
     if (!isValidPassword) {
-      console.log("Invalid password");
+      console.log("Invalid password during login attempt for:", email);
       return NextResponse.json(
         { error: "Invalid email or password" },
         { status: 401 }
+      );
+    }
+
+    if (!foundUser.emailVerified) {
+      console.log("Login attempt failed: Email not verified for:", email);
+      return NextResponse.json(
+        { error: "Email not verified. Please check your email for the verification link." },
+        { status: 403 }
       );
     }
 
@@ -77,12 +85,12 @@ export async function POST(request: Request) {
 
     await db.insert(sessions).values({
       id: sessionId,
-      userId: user[0].id,
+      userId: foundUser.id,
       expiresAt,
     });
 
     // Create response with user data (excluding password)
-    const { password: _, ...userWithoutPassword } = user[0];
+    const { password: _, ...userWithoutPassword } = foundUser;
     const response = NextResponse.json(userWithoutPassword);
 
     // Set the session cookie with secure settings

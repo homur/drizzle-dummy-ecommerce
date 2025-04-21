@@ -14,10 +14,12 @@ export default function LoginPage() {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setShowVerificationMessage(false);
     setIsLoading(true);
 
     try {
@@ -39,7 +41,13 @@ export default function LoginPage() {
       const redirectTo = searchParams.get("redirect") || "/";
       router.push(redirectTo);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Failed to log in");
+      const errorMessage = error instanceof Error ? error.message : "Failed to log in";
+      if (errorMessage.includes("Email not verified")) {
+        setShowVerificationMessage(true);
+        setError("");
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +111,28 @@ export default function LoginPage() {
               </div>
             </div>
 
+            <div className="flex items-center justify-end">
+                <div className="text-sm">
+                    <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
+                        Forgot your password?
+                    </Link>
+                </div>
+            </div>
+
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
+            )}
+
+            {showVerificationMessage && (
+              <div className="p-3 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded text-sm text-center">
+                <p>Your email address is not verified.</p>
+                <p>Please check your inbox (and spam folder) for the verification link.</p>
+                <p className="mt-1">
+                  <Link href="/check-email" className="font-medium text-indigo-600 hover:text-indigo-500">
+                     Need help?
+                  </Link>
+                </p>
+              </div>
             )}
 
             <div>

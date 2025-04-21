@@ -5,6 +5,28 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RootLayout } from "@/components/layout/RootLayout";
 
+// Password validation function (same as backend)
+function isPasswordSecure(password: string): boolean {
+    const minLength = 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasLowercase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+
+    return (
+        password.length >= minLength &&
+        hasUppercase &&
+        hasLowercase &&
+        hasNumber
+    );
+}
+
+const passwordRequirements = [
+    "At least 8 characters long",
+    "At least one uppercase letter (A-Z)",
+    "At least one lowercase letter (a-z)",
+    "At least one number (0-9)",
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -14,14 +36,23 @@ export default function RegisterPage() {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [passwordError, setPasswordError] = useState(""); // Specific state for password errors
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setPasswordError(""); // Clear password error on new submit
 
+    // 1. Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+    
+    // 2. Check password complexity
+    if (!isPasswordSecure(formData.password)) {
+      setPasswordError("Password must be at least 8 characters long and include uppercase, lowercase, and a number.");
       return;
     }
 
@@ -46,10 +77,12 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to register");
       }
 
-      // Redirect to login page on success
-      router.push("/login");
+      // Redirect to check email page on success
+      router.push("/check-email");
     } catch (error) {
+       // Handle API errors (like email already exists, or backend validation if somehow frontend fails)
       setError(error instanceof Error ? error.message : "Failed to register");
+      setPasswordError(""); // Clear specific password error if API error occurs
     } finally {
       setIsLoading(false);
     }
@@ -121,12 +154,14 @@ export default function RegisterPage() {
                   type="password"
                   autoComplete="new-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${passwordError ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                   placeholder="Password"
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, password: e.target.value });
+                    // Optional: Add real-time validation feedback here if desired
+                    // if (passwordError) setPasswordError(""); // Clear error on change
+                  }}
                 />
               </div>
               <div>
@@ -139,19 +174,36 @@ export default function RegisterPage() {
                   type="password"
                   autoComplete="new-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${error === 'Passwords do not match' ? 'border-red-500' : ''}`}
                   placeholder="Confirm password"
                   value={formData.confirmPassword}
-                  onChange={(e) =>
+                   onChange={(e) => {
                     setFormData({
                       ...formData,
                       confirmPassword: e.target.value,
-                    })
-                  }
+                    });
+                     if (error === 'Passwords do not match') setError(""); // Clear mismatch error on change
+                   }}
                 />
               </div>
             </div>
 
+            {/* Display Password Requirements */}
+            <div className="text-xs text-gray-600 space-y-1">
+              <p className="font-medium">Password must contain:</p>
+              <ul className="list-disc list-inside pl-2">
+                {passwordRequirements.map((req, index) => (
+                  <li key={index}>{req}</li>
+                ))}
+              </ul>
+            </div>
+
+             {/* Display Specific Password Error */}
+            {passwordError && (
+              <div className="text-red-500 text-sm text-center">{passwordError}</div>
+            )}
+
+            {/* Display General / API Errors */}
             {error && (
               <div className="text-red-500 text-sm text-center">{error}</div>
             )}
