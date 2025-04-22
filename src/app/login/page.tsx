@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RootLayout } from "@/components/layout/RootLayout";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +43,8 @@ export default function LoginPage() {
       const redirectTo = searchParams.get("redirect") || "/";
       router.push(redirectTo);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to log in";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to log in";
       if (errorMessage.includes("Email not verified")) {
         setShowVerificationMessage(true);
         setError("");
@@ -95,28 +98,44 @@ export default function LoginPage() {
                 <label htmlFor="password" className="sr-only">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
             <div className="flex items-center justify-end">
-                <div className="text-sm">
-                    <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                        Forgot your password?
-                    </Link>
-                </div>
+              <div className="text-sm">
+                <Link
+                  href="/forgot-password"
+                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
             </div>
 
             {error && (
@@ -126,10 +145,16 @@ export default function LoginPage() {
             {showVerificationMessage && (
               <div className="p-3 bg-yellow-100 border border-yellow-400 text-yellow-800 rounded text-sm text-center">
                 <p>Your email address is not verified.</p>
-                <p>Please check your inbox (and spam folder) for the verification link.</p>
+                <p>
+                  Please check your inbox (and spam folder) for the verification
+                  link.
+                </p>
                 <p className="mt-1">
-                  <Link href="/check-email" className="font-medium text-indigo-600 hover:text-indigo-500">
-                     Need help?
+                  <Link
+                    href="/check-email"
+                    className="font-medium text-indigo-600 hover:text-indigo-500"
+                  >
+                    Need help?
                   </Link>
                 </p>
               </div>

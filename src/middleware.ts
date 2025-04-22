@@ -35,35 +35,25 @@ export async function middleware(request: NextRequest) {
   const sessionId = request.cookies.get("sessionId")?.value;
   console.log("Session ID present:", !!sessionId);
 
-  try {
-    // If user is authenticated and tries to access public paths, redirect to home
-    if (isPublicPath && sessionId) {
-      console.log(
-        "Authenticated user trying to access public path, redirecting to home"
-      );
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    // If user is not authenticated and tries to access protected paths, redirect to login
-    if (isProtectedPath && !sessionId) {
-      console.log(
-        "Unauthenticated user trying to access protected path, redirecting to login"
-      );
-      const loginUrl = new URL("/login", request.url);
-      // Add the current path as a redirect parameter
-      loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    console.log("Middleware allowing access to:", pathname);
-    return NextResponse.next();
-  } catch (error) {
-    console.error("Middleware error:", error);
-    // If there's an error, redirect to login
-    const response = NextResponse.redirect(new URL("/login", request.url));
+  // If there's a session ID but we're on a public path, clear it
+  if (isPublicPath && sessionId) {
+    console.log("Clearing session cookie on public path");
+    const response = NextResponse.redirect(new URL("/", request.url));
     response.cookies.delete("sessionId");
     return response;
   }
+
+  // If there's no session ID and we're on a protected path, redirect to login
+  if (isProtectedPath && !sessionId) {
+    console.log("No session ID, redirecting to login");
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // If we have a session ID, let the API routes handle validation
+  console.log("Middleware allowing access to:", pathname);
+  return NextResponse.next();
 }
 
 // Configure which paths the middleware should run on

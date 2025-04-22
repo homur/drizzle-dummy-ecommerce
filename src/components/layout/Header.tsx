@@ -78,6 +78,11 @@ export function Header() {
           onClick: () => setIsDropdownOpen(false),
         },
         {
+          label: "Messages",
+          href: "/messages",
+          onClick: () => setIsDropdownOpen(false),
+        },
+        {
           label: "Logout",
           onClick: handleLogout,
         },
