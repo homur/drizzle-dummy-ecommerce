@@ -56,6 +56,22 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting customer:", error);
+
+    // Check if it's a foreign key constraint error
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "23503"
+    ) {
+      return NextResponse.json(
+        {
+          error: "Cannot delete customer with associated orders",
+          code: "23503",
+        },
+        { status: 400 }
+      );
+    }
     return NextResponse.json(
       { error: "Failed to delete customer" },
       { status: 500 }

@@ -83,6 +83,11 @@ export function Header() {
           onClick: () => setIsDropdownOpen(false),
         },
         {
+          label: "Orders",
+          href: "/orders",
+          onClick: () => setIsDropdownOpen(false),
+        },
+        {
           label: "Logout",
           onClick: handleLogout,
         },

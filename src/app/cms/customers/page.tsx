@@ -53,18 +53,30 @@ export default function CustomersPage() {
     if (!confirm("Are you sure you want to delete this customer?")) return;
 
     try {
-      const response = await fetch(`/api/cms/customers/${customerId}`, {
+      const response = await fetch(`/api/cms/customers?id=${customerId}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete customer");
+        const errorData = await response.json();
+        if (errorData.code === "23503") {
+          alert(
+            "Cannot delete this customer because they have associated orders. Please delete their orders first or contact support."
+          );
+        } else {
+          alert(
+            `Failed to delete customer: ${errorData.error || "Unknown error"}`
+          );
+        }
+        return;
       }
 
       setCustomers((prev) => prev.filter((c) => c.id !== customerId));
     } catch (error) {
       console.error("Error deleting customer:", error);
-      alert("Failed to delete customer");
+      alert(
+        "An unexpected error occurred while trying to delete the customer. Please try again later."
+      );
     }
   };
 
