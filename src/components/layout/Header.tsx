@@ -3,14 +3,12 @@
 import Link from "next/link";
 import { ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { useAuth } from "@/hooks/use-auth";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export function Header() {
   const cart = useCart();
   const router = useRouter();
-  const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +47,18 @@ export function Header() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await logout();
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      if (response.ok) {
+        setIsAuthenticated(false);
+        setIsDropdownOpen(false);
+        router.push("/login");
+      } else {
+        console.error("Logout failed:", await response.text());
+      }
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error("Logout error:", err);
     } finally {
       setIsLoggingOut(false);
     }
