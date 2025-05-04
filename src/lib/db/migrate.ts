@@ -7,8 +7,20 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const main = async () => {
+  const databaseUrl =
+    process.env.NODE_ENV === "production"
+      ? process.env.DATABASE_URL_PROD
+      : process.env.DATABASE_URL_LOCAL;
+
+  if (!databaseUrl) {
+    console.error(
+      "Migration Error: Database URL not set. Ensure DATABASE_URL_PROD or DATABASE_URL_LOCAL is defined in your .env file.",
+    );
+    process.exit(1);
+  }
+
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
   });
 
   const db = drizzle(pool);
