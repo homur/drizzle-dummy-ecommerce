@@ -23,7 +23,13 @@ export async function GET() {
       .where(eq(sessions.id, sessionId));
 
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      // Session not found, clear the cookie
+      const response = NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+      response.cookies.delete("sessionId");
+      return response;
     }
 
     // Get user details
@@ -37,7 +43,14 @@ export async function GET() {
       .where(eq(users.id, session.userId));
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      // User not found, clear the session
+      await db.delete(sessions).where(eq(sessions.id, sessionId));
+      const response = NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+      response.cookies.delete("sessionId");
+      return response;
     }
 
     return NextResponse.json({

@@ -2,11 +2,19 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { Resend } from 'resend';
-import { randomBytes, createHash } from 'crypto';
+import { Resend } from "resend";
+import { randomBytes, createHash } from "crypto";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+let resend: Resend | null = null;
+try {
+  if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error("Failed to initialize Resend:", error);
+}
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export async function POST(request: Request) {
   try {
@@ -25,14 +33,19 @@ export async function POST(request: Request) {
 
     // IMPORTANT: Always return a success-like response even if user not found
     // This prevents email enumeration attacks.
-    if (!user || !user.emailVerified) { 
-      console.log(`Password reset requested for non-existent or unverified email: ${email}`);
-      return NextResponse.json({ message: "If an account with this email exists and is verified, a password reset link has been sent." });
+    if (!user || !user.emailVerified) {
+      console.log(
+        `Password reset requested for non-existent or unverified email: ${email}`
+      );
+      return NextResponse.json({
+        message:
+          "If an account with this email exists and is verified, a password reset link has been sent.",
+      });
     }
 
     // Generate a raw token and a hashed token
-    const rawToken = randomBytes(32).toString('hex');
-    const hashedToken = createHash('sha256').update(rawToken).digest('hex');
+    const rawToken = randomBytes(32).toString("hex");
+    const hashedToken = createHash("sha256").update(rawToken).digest("hex");
     const tokenExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
 
     // Store the hashed token and expiry in the database
@@ -49,34 +62,54 @@ export async function POST(request: Request) {
     const resetUrl = `${appUrl}/reset-password?token=${rawToken}`;
 
     try {
+      if (!resend) {
+        throw new Error("Email service is not configured");
+      }
       await resend.emails.send({
-        from: 'onboarding@resend.dev', // Replace with your verified sender domain
+        from: "onboarding@resend.dev",
         to: email,
-        subject: 'Reset Your Password',
-        html: `<p>Hi ${user.name || 'there'},</p><p>You requested a password reset. Click the link below to set a new password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>This link is valid for 1 hour. If you didn't request this, please ignore this email.</p>`
-        // react: <PasswordResetEmail name={user.name} resetUrl={resetUrl} />
+        subject: "Reset Your Password",
+        html: `
+          <h1>Password Reset Request</h1>
+          <p>Hi ${user.name || "there"},</p>
+          <p>You requested a password reset. Click the link below to set a new password:</p>
+          <p><a href="${resetUrl}">${resetUrl}</a></p>
+          <p>This link is valid for 1 hour. If you didn't request this, please ignore this email.</p>
+        `,
       });
     } catch (emailError) {
       console.error("Failed to send password reset email:", emailError);
-      // Don't reveal the error to the client, but clear the token we just set
+      // Clear the token we just set since we couldn't send the email
       await db
-          .update(users)
-          .set({
-              resetPasswordToken: null,
-              resetPasswordTokenExpires: null,
-              updatedAt: new Date(),
-          })
-          .where(eq(users.id, user.id));
-      // Still return the generic success message
-    }
-    
-    return NextResponse.json({ message: "If an account with this email exists and is verified, a password reset link has been sent." });
+        .update(users)
+        .set({
+          resetPasswordToken: null,
+          resetPasswordTokenExpires: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id));
 
+      return NextResponse.json(
+        {
+          error: "Failed to send password reset email. Please try again later.",
+          details:
+            emailError instanceof Error
+              ? emailError.message
+              : "Email service is currently unavailable.",
+        },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json({
+      message:
+        "If an account with this email exists and is verified, a password reset link has been sent.",
+    });
   } catch (error) {
     console.error("Request password reset error:", error);
-    // Generic error for unexpected issues, don't reveal details
-    return NextResponse.json({ message: "An error occurred. Please try again later." }, { status: 500 }); 
-    // Or return the standard success message to be safe
-    // return NextResponse.json({ message: "If an account with this email exists and is verified, a password reset link has been sent." });
+    return NextResponse.json(
+      { error: "An error occurred. Please try again later." },
+      { status: 500 }
+    );
   }
-} 
+}

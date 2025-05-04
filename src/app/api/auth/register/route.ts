@@ -3,27 +3,32 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
-import { Resend } from 'resend';
-import { randomBytes, createHash } from 'crypto';
+import { Resend } from "resend";
+import { randomBytes, createHash } from "crypto";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'; // Ensure this env var is set
+let resend: Resend | null = null;
+try {
+  if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.error("Failed to initialize Resend:", error);
+}
+
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"; // Ensure this env var is set
 
 // Password validation function
 function isPasswordSecure(password: string): boolean {
-    const minLength = 8;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    // const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(password); // Removed
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  // const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(password); // Removed
 
-    return (
-        password.length >= minLength &&
-        hasUppercase &&
-        hasLowercase &&
-        hasNumber
-        // && hasSpecialChar // Removed
-    );
+  return (
+    password.length >= minLength && hasUppercase && hasLowercase && hasNumber
+    // && hasSpecialChar // Removed
+  );
 }
 
 export async function POST(request: Request) {
@@ -37,106 +42,151 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
-    // *** Add password complexity validation ***
+
+    // Check password complexity
     if (!isPasswordSecure(password)) {
       return NextResponse.json(
         {
           error:
-            "Password does not meet security requirements. It must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.", // Updated error message
+            "Password does not meet security requirements. It must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.",
         },
         { status: 400 }
       );
     }
-    // --- End password validation ---
 
     // Check if user already exists but isn't verified
     const [existingUser] = await db
       .select()
       .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
+      .where(eq(users.email, email));
 
-    if (existingUser && existingUser.emailVerified) {
+    if (existingUser) {
+      if (!existingUser.emailVerified) {
+        // Generate new verification token
+        const verificationToken = randomBytes(32).toString("hex");
+        const hashedToken = createHash("sha256")
+          .update(verificationToken)
+          .digest("hex");
+
+        // Update user with new token
+        await db
+          .update(users)
+          .set({
+            verificationToken: hashedToken,
+            verificationTokenExpires: new Date(
+              Date.now() + 24 * 60 * 60 * 1000
+            ), // 24 hours
+          })
+          .where(eq(users.id, existingUser.id));
+
+        try {
+          // Send new verification email
+          if (!resend) {
+            throw new Error("Email service is not configured");
+          }
+          await resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: email,
+            subject: "Verify your email address",
+            html: `
+              <h1>Welcome to Drizzle Dummy!</h1>
+              <p>Please verify your email address by clicking the link below:</p>
+              <a href="${appUrl}/verify-email?token=${verificationToken}">Verify Email</a>
+              <p>This link will expire in 24 hours.</p>
+            `,
+          });
+        } catch (emailError) {
+          console.error("Failed to send verification email:", emailError);
+          return NextResponse.json(
+            {
+              error:
+                "Failed to send verification email. Please try again later.",
+              details:
+                emailError instanceof Error
+                  ? emailError.message
+                  : "Email service is currently unavailable.",
+            },
+            { status: 503 }
+          );
+        }
+
+        return NextResponse.json(
+          { message: "Verification email resent. Please check your inbox." },
+          { status: 200 }
+        );
+      }
       return NextResponse.json(
-        { error: "Email already registered and verified" },
+        { error: "Email already registered" },
         { status: 400 }
       );
     }
 
-    // If user exists but is not verified, potentially resend email or handle differently?
-    // For now, we'll prevent registering again if *any* user exists with that email.
-     if (existingUser) {
-       return NextResponse.json(
-         { error: "Email already registered. Check your email for verification link or request a new one." },
-         { status: 400 }
-       );
-     }
-
-
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // Generate verification token
-    const rawToken = randomBytes(32).toString('hex');
-    const hashedToken = createHash('sha256').update(rawToken).digest('hex');
-    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+    const verificationToken = randomBytes(32).toString("hex");
+    const hashedToken = createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
 
-    // Create user with verification token
-    // Note: We are not returning the user data anymore after creation in this flow
-    await db
+    // Create new user
+    const [newUser] = await db
       .insert(users)
       .values({
         name,
         email,
         password: hashedPassword,
         verificationToken: hashedToken,
-        verificationTokenExpires: tokenExpires,
-        // emailVerified defaults to false
-      });
-      // You might want to get the newUser ID if needed for logging, but not sending back to client
-
-    // Send verification email
-    const verificationUrl = `${appUrl}/verify-email?token=${rawToken}`;
+        verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        emailVerified: false,
+      })
+      .returning();
 
     try {
-        await resend.emails.send({
-            from: 'onboarding@resend.dev', // Replace with your verified sender domain
-            to: email,
-            subject: 'Verify Your Email Address',
-            html: `<p>Hi ${name},</p><p>Please click the link below to verify your email address:</p><p><a href="${verificationUrl}">${verificationUrl}</a></p><p>This link will expire in 24 hours.</p>`
-            // Alternatively use React components for emails if you have them set up
-            // react: <VerificationEmail name={name} verificationUrl={verificationUrl} />
-        });
+      // Send verification email
+      if (!resend) {
+        throw new Error("Email service is not configured");
+      }
+      await resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: email,
+        subject: "Verify your email address",
+        html: `
+          <h1>Welcome to Drizzle Dummy!</h1>
+          <p>Please verify your email address by clicking the link below:</p>
+          <a href="${appUrl}/verify-email?token=${verificationToken}">Verify Email</a>
+          <p>This link will expire in 24 hours.</p>
+        `,
+      });
     } catch (emailError) {
-        console.error("Failed to send verification email:", emailError);
-        // Important: Decide how to handle this.
-        // Option 1: Delete the user created above (rollback)
-        // Option 2: Return an error but keep the user (they need to request verification again later)
-        // Option 3: Log the error and proceed (user won't get email immediately)
-        // For now, returning a generic server error, but user exists in DB unverified.
-         return NextResponse.json(
-           { error: "User registered, but failed to send verification email. Please contact support or try requesting verification again later." },
-           { status: 500 } // Or maybe 201 with a specific message
-         );
+      console.error("Failed to send verification email:", emailError);
+      // Delete the user since we couldn't send the verification email
+      await db.delete(users).where(eq(users.id, newUser.id));
+      return NextResponse.json(
+        {
+          error: "Failed to send verification email. Please try again later.",
+          details:
+            emailError instanceof Error
+              ? emailError.message
+              : "Email service is currently unavailable.",
+        },
+        { status: 503 }
+      );
     }
 
-
-    // Return success message instead of user data
-    return NextResponse.json({ message: "Registration successful. Please check your email to verify your account." }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        message:
+          "Registration successful. Please check your email to verify your account.",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Registration error:", error);
-    // Handle potential database errors or other unexpected issues
-    if (error instanceof Error && error.message.includes('duplicate key value violates unique constraint')) {
-       // This might happen in a race condition if check+insert isn't atomic enough
-       return NextResponse.json(
-         { error: "Email already registered." },
-         { status: 400 }
-       );
-    }
     return NextResponse.json(
-      { error: "Internal server error during registration." },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

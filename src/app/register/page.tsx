@@ -4,27 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { RootLayout } from "@/components/layout/RootLayout";
+import { Eye, EyeOff } from "lucide-react";
 
 // Password validation function (same as backend)
 function isPasswordSecure(password: string): boolean {
-    const minLength = 8;
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasLowercase = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
 
-    return (
-        password.length >= minLength &&
-        hasUppercase &&
-        hasLowercase &&
-        hasNumber
-    );
+  return (
+    password.length >= minLength && hasUppercase && hasLowercase && hasNumber
+  );
 }
 
 const passwordRequirements = [
-    "At least 8 characters long",
-    "At least one uppercase letter (A-Z)",
-    "At least one lowercase letter (a-z)",
-    "At least one number (0-9)",
+  "At least 8 characters long",
+  "At least one uppercase letter (A-Z)",
+  "At least one lowercase letter (a-z)",
+  "At least one number (0-9)",
 ];
 
 export default function RegisterPage() {
@@ -38,6 +36,8 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [passwordError, setPasswordError] = useState(""); // Specific state for password errors
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,10 +49,12 @@ export default function RegisterPage() {
       setError("Passwords do not match");
       return;
     }
-    
+
     // 2. Check password complexity
     if (!isPasswordSecure(formData.password)) {
-      setPasswordError("Password must be at least 8 characters long and include uppercase, lowercase, and a number.");
+      setPasswordError(
+        "Password must be at least 8 characters long and include uppercase, lowercase, and a number."
+      );
       return;
     }
 
@@ -80,7 +82,7 @@ export default function RegisterPage() {
       // Redirect to check email page on success
       router.push("/check-email");
     } catch (error) {
-       // Handle API errors (like email already exists, or backend validation if somehow frontend fails)
+      // Handle API errors (like email already exists, or backend validation if somehow frontend fails)
       setError(error instanceof Error ? error.message : "Failed to register");
       setPasswordError(""); // Clear specific password error if API error occurs
     } finally {
@@ -148,43 +150,66 @@ export default function RegisterPage() {
                 <label htmlFor="password" className="sr-only">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${passwordError ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    // Optional: Add real-time validation feedback here if desired
-                    // if (passwordError) setPasswordError(""); // Clear error on change
-                  }}
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${passwordError ? "border-red-500" : "border-gray-300"} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div>
                 <label htmlFor="confirmPassword" className="sr-only">
                   Confirm password
                 </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm ${error === 'Passwords do not match' ? 'border-red-500' : ''}`}
-                  placeholder="Confirm password"
-                  value={formData.confirmPassword}
-                   onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    });
-                     if (error === 'Passwords do not match') setError(""); // Clear mismatch error on change
-                   }}
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    required
+                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Confirm password"
+                    value={formData.confirmPassword}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -198,9 +223,11 @@ export default function RegisterPage() {
               </ul>
             </div>
 
-             {/* Display Specific Password Error */}
+            {/* Display Specific Password Error */}
             {passwordError && (
-              <div className="text-red-500 text-sm text-center">{passwordError}</div>
+              <div className="text-red-500 text-sm text-center">
+                {passwordError}
+              </div>
             )}
 
             {/* Display General / API Errors */}
