@@ -37,33 +37,26 @@ export default function OrderLookupPage() {
   const [orderId, setOrderId] = useState("");
   const [email, setEmail] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
+    setOrder(null);
 
     try {
-      const response = await fetch(`/api/orders/lookup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ orderId, email }),
-      });
-
+      const response = await fetch(`/api/orders/lookup?orderId=${orderId}&email=${email}`);
       if (!response.ok) {
-        throw new Error("Order not found");
+        const errorData = await response.json();
+        alert(errorData.error || "Failed to look up order.");
+        setOrder(null);
+        throw new Error(errorData.error || "Failed to look up order");
       }
-
       const data = await response.json();
       setOrder(data);
-    } catch (error) {
-      setError(
-        "Order not found. Please check your order ID and email address."
-      );
+    } catch (err) {
+      console.error("Order lookup failed:", err);
+      setOrder(null);
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +68,7 @@ export default function OrderLookupPage() {
         <div className="container mx-auto px-4 py-8">
           <FormTitle>Order Lookup</FormTitle>
 
-          <form onSubmit={handleSubmit} className="max-w-md mx-auto space-y-4">
+          <form onSubmit={handleLookup} className="max-w-md mx-auto space-y-4">
             <FormInput
               id="orderId"
               label="Order ID"
@@ -94,8 +87,6 @@ export default function OrderLookupPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
             />
-
-            {error && <div className="text-red-600 text-sm">{error}</div>}
 
             <FormButton type="submit" isLoading={isLoading} className="w-full">
               Look Up Order

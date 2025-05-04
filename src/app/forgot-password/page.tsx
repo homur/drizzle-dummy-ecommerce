@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
               Forgot Your Password?
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              Enter your email address and we'll send you a link to reset it.
+              Enter your email address and we&apos;ll send you a link to reset it.
             </p>
           </div>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -103,6 +103,14 @@ export default function ForgotPasswordPage() {
                 Remembered your password? Sign in
               </Link>
             </div>
+            {
+              message && (
+                <p className="text-sm text-green-600 mt-4 text-center">
+                  {/* Replace ' with &apos; */}
+                  {message || "If an account with that email exists, we&apos;ve sent instructions to reset your password."}
+                </p>
+              )
+            }
           </form>
         </div>
       </div>

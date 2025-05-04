@@ -32,7 +32,7 @@ export async function uploadProductImage(
     const key = `${BUCKET_NAME}/${filename}`;
 
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { data: _data, error } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filename, buffer, {
         contentType: file.type,
@@ -78,4 +78,39 @@ export function getImageUrl(key: string): string {
     data: { publicUrl },
   } = supabase.storage.from(BUCKET_NAME).getPublicUrl(key);
   return publicUrl;
+}
+
+export async function uploadImageToCloudflare(file: File): Promise<ImageUploadResult> {
+  // ... form data prep ...
+
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Cloudflare upload error:", errorText);
+      throw new Error(`Failed to upload image: ${response.statusText}`);
+    }
+
+    // Rename data to _data as it's unused
+    const _data = await response.json();
+
+    // Construct the public URL using the environment variable
+    const publicUrl = `${process.env.NEXT_PUBLIC_CLOUDFLARE_PUBLIC_URL}/${imageKey}`;
+
+    return {
+      key: imageKey,
+      url: publicUrl,
+      // You might get width/height from the API response (_data) if available
+      width: 0, // Placeholder
+      height: 0, // Placeholder
+      format: file.type.split("/")[1] || "", // Extract format
+    };
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
 }

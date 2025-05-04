@@ -2,11 +2,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { generateSlug } from "@/lib/utils/slug";
 import { Product } from "@/types/product";
 
-const ITEMS_PER_PAGE = 12;
+export const dynamic = "force-dynamic"; // Ensure dynamic rendering
 
 export async function GET(request: Request) {
   try {

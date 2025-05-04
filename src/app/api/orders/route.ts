@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { orders, orderItems } from "@/lib/db/schema";
 import { getSession } from "@/lib/auth";
+import { CartItem } from "@/hooks/use-cart";
 
 export async function POST(request: Request) {
   try {
@@ -27,9 +28,9 @@ export async function POST(request: Request) {
 
     // Create order items
     await db.insert(orderItems).values(
-      items.map((item: any) => ({
+      items.map((item: CartItem) => ({
         orderId: order.id,
-        productId: item.id,
+        productId: parseInt(item.id, 10),
         quantity: item.quantity,
         price: item.price,
       }))

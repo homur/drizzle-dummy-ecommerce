@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { FormTitle } from "@/components/forms/FormElements";
+import Link from "next/link";
 
 interface OrderItem {
   id: number;
@@ -32,10 +33,10 @@ interface Order {
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchOrders = async () => {
+      setIsLoading(true);
       try {
         const response = await fetch("/api/orders/user");
         if (!response.ok) {
@@ -43,8 +44,8 @@ export default function OrdersPage() {
         }
         const data = await response.json();
         setOrders(data);
-      } catch (error) {
-        setError("Failed to load orders. Please try again later.");
+      } catch (err) {
+        console.error("Failed to load orders:", err);
       } finally {
         setIsLoading(false);
       }
@@ -66,19 +67,6 @@ export default function OrdersPage() {
     );
   }
 
-  if (error) {
-    return (
-      <RootLayout>
-        <div className="min-h-[calc(100vh-4rem)] bg-gray-50">
-          <div className="container mx-auto px-4 py-8">
-            <FormTitle>My Orders</FormTitle>
-            <div className="text-center text-red-600 py-8">{error}</div>
-          </div>
-        </div>
-      </RootLayout>
-    );
-  }
-
   if (orders.length === 0) {
     return (
       <RootLayout>
@@ -86,8 +74,14 @@ export default function OrdersPage() {
           <div className="container mx-auto px-4 py-8">
             <FormTitle>My Orders</FormTitle>
             <div className="text-center py-8">
-              You haven't placed any orders yet.
+              No orders found.
             </div>
+            <Link
+              href="/"
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Let&apos;s find something amazing!
+            </Link>
           </div>
         </div>
       </RootLayout>

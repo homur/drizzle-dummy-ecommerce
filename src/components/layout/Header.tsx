@@ -1,25 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, User, LogOut } from "lucide-react";
+import { ShoppingBag, User } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-const navigation = [
-  { name: "Home", href: "/" },
-  { name: "Designs", href: "/products" },
-  { name: "Categories", href: "/categories" },
-  { name: "About", href: "/about" },
-];
 
 export function Header() {
   const cart = useCart();
   const router = useRouter();
+  const { user, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check authentication status
@@ -51,16 +47,13 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-      if (response.ok) {
-        setIsAuthenticated(false);
-        router.push("/login");
-      }
-    } catch (error) {
-      console.error("Error logging out:", error);
+      await logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -157,7 +150,7 @@ export function Header() {
               className="text-gray-600 hover:text-gray-900 p-2 rounded-full hover:bg-gray-100 relative"
               title="Cart"
             >
-              <ShoppingCart className="h-6 w-6" />
+              <ShoppingBag className="h-6 w-6" />
               {cart.items.length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {cart.items.length}

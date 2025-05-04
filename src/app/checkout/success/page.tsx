@@ -13,8 +13,12 @@ export default function CheckoutSuccessPage() {
       <div className="min-h-[calc(100vh-4rem)] bg-gray-50">
         <div className="container mx-auto px-4 py-16 text-center">
           <FormTitle>Thank you for your order!</FormTitle>
-          <p className="text-gray-600 mb-8">
-            We'll send you a confirmation email with your order details shortly.
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Order Successful!
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Thank you for your purchase. We&apos;ve received your order and will
+            process it shortly.
           </p>
           <div className="space-y-4">
             <FormButton onClick={() => router.push("/products")}>

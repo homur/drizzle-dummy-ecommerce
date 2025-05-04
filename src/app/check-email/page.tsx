@@ -16,15 +16,11 @@ export default function CheckEmailPage() {
               Check Your Email
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
-              We've sent a verification link to your email address. Please click the link to activate your account.
+              We&apos;ve sent a verification link to your email address. Please check
+              your inbox and spam folder.
             </p>
             <p className="mt-4 text-center text-sm text-gray-500">
-              Didn't receive the email? Check your spam folder or{' '}
-              {/* Add link/button to resend verification later if needed */}
-              <span className="font-medium text-indigo-600 hover:text-indigo-500 cursor-not-allowed">
-                request a new link
-              </span>
-              .
+              Didn&apos;t receive the email? Check your spam folder or request a new link.
             </p>
             <p className="mt-6">
               <Link href="/" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
