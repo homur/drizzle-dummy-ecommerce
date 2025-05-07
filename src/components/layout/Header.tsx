@@ -13,7 +13,6 @@ export function Header() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     // Check authentication status
@@ -22,6 +21,7 @@ export function Header() {
         const response = await fetch("/api/auth/me");
         setIsAuthenticated(response.ok);
       } catch (error) {
+        console.error("Authentication check error:", error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -45,7 +45,6 @@ export function Header() {
   }, []);
 
   const handleLogout = async () => {
-    setIsLoggingOut(true);
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
@@ -59,9 +58,7 @@ export function Header() {
       }
     } catch (err) {
       console.error("Logout error:", err);
-    } finally {
-      setIsLoggingOut(false);
-    }
+    } 
   };
 
   const toggleDropdown = (e: React.MouseEvent) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { RootLayout } from "@/components/layout/RootLayout";
 import { FormTitle } from "@/components/forms/FormElements";
 import Link from "next/link";
@@ -161,11 +162,12 @@ export default function OrdersPage() {
                           key={item.id}
                           className="flex items-center space-x-4"
                         >
-                          <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
-                            <img
+                          <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden relative">
+                            <Image
                               src={item.product.imageUrl}
                               alt={item.product.name}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
                             />
                           </div>
                           <div className="flex-1">

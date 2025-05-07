@@ -21,3 +21,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - Nextjs for backend and React frontend
 - Drizzle ORM for db queries
 - Tailwind.css 
+
+
+
+
+
+## Todo
+- Update user password repeat requirement on password reset/update

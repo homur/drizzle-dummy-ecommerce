@@ -5,6 +5,7 @@ import { useCart } from "@/hooks/use-cart";
 import { ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 
 interface Product {
   id: string;
@@ -88,11 +89,12 @@ export default function ProductDetailPage() {
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
               {/* Product Image */}
-              <div className="aspect-w-1 aspect-h-1">
-                <img
+              <div className="aspect-w-1 aspect-h-1 relative">
+                <Image
                   src={product.imageUrl}
                   alt={product.name}
-                  className="w-full h-full object-cover rounded-lg"
+                  fill
+                  className="object-cover rounded-lg"
                 />
               </div>
 

@@ -3,12 +3,18 @@ import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+type RouteContext = {
+  params: Promise<{
+    slug: string;
+  }>;
+};
+
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  context: RouteContext
 ) {
   try {
-    const { slug } = await params;
+    const { slug } = await context.params;
     const product = await db
       .select()
       .from(products)

@@ -6,7 +6,7 @@ interface FooterNavItem {
   name: string;
   href: string;
   // Add optional icon type if needed, based on original component structure
-  icon?: (props: React.ComponentProps<"svg">) => JSX.Element;
+  icon?: (props: React.ComponentProps<"svg">) => React.ReactNode;
 }
 
 const navigation = {

@@ -39,6 +39,7 @@ const eslintConfig = [
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+      "react/react-in-jsx-scope": "off"
     },
   },
 ];

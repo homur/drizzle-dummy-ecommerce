@@ -3,19 +3,26 @@ import { db } from "@/lib/db";
 import { cmsUsers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
+type RouteContext = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     const body = await request.json();
     const { name, email, role } = body;
+    const { id } = await context.params;
 
     // Check if user exists
     const existingUser = await db
       .select()
       .from(cmsUsers)
-      .where(eq(cmsUsers.id, parseInt(params.id)))
+      .where(eq(cmsUsers.id, parseInt(id)))
       .limit(1);
 
     if (existingUser.length === 0) {
@@ -27,7 +34,7 @@ export async function PUT(
       .select()
       .from(cmsUsers)
       .where(
-        and(eq(cmsUsers.email, email), eq(cmsUsers.id, parseInt(params.id)))
+        and(eq(cmsUsers.email, email), eq(cmsUsers.id, parseInt(id)))
       )
       .limit(1);
 
@@ -47,7 +54,7 @@ export async function PUT(
         role,
         updatedAt: new Date(),
       })
-      .where(eq(cmsUsers.id, parseInt(params.id)))
+      .where(eq(cmsUsers.id, parseInt(id)))
       .returning();
 
     // Remove password from response
@@ -65,14 +72,16 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
+    const { id } = await context.params;
+    
     // Check if user exists
     const existingUser = await db
       .select()
       .from(cmsUsers)
-      .where(eq(cmsUsers.id, parseInt(params.id)))
+      .where(eq(cmsUsers.id, parseInt(id)))
       .limit(1);
 
     if (existingUser.length === 0) {
@@ -80,7 +89,7 @@ export async function DELETE(
     }
 
     // Delete user
-    await db.delete(cmsUsers).where(eq(cmsUsers.id, parseInt(params.id)));
+    await db.delete(cmsUsers).where(eq(cmsUsers.id, parseInt(id)));
 
     return NextResponse.json({ message: "User deleted successfully" });
   } catch (error) {

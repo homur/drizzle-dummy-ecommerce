@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import {
   FormInput,
   FormTitle,
@@ -150,11 +151,12 @@ export default function OrderLookupPage() {
                         key={item.id}
                         className="flex items-center space-x-4 border-b pb-4 last:border-b-0"
                       >
-                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
-                          <img
+                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden relative">
+                          <Image
                             src={item.product.imageUrl}
                             alt={item.product.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                         <div className="flex-1">
