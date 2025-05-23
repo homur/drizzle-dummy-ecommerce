@@ -1,61 +1,27 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { users, sessions } from "@/lib/db/schema";
-import { eq, and, gt } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { SupabaseAuthService } from "@/lib/services/supabase-auth-service";
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      console.log("No session ID found in cookies");
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+    if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // Get valid session
-    const session = await db
-      .select()
-      .from(sessions)
-      .where(
-        and(eq(sessions.id, sessionId), gt(sessions.expiresAt, new Date()))
-      )
-      .limit(1);
-
-    if (!session || session.length === 0) {
-      console.log("Invalid or expired session");
+    const authService = new SupabaseAuthService();
+    const user = await authService.getUserByAccessToken(accessToken);
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // Update last accessed time
-    await db
-      .update(sessions)
-      .set({ lastAccessedAt: new Date() })
-      .where(eq(sessions.id, sessionId));
-
-    // Fetch user from database
-    const user = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-      })
-      .from(users)
-      .where(eq(users.id, session[0].userId))
-      .limit(1);
-
-    if (!user || user.length === 0) {
-      console.log("User not found for session");
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    console.log("User found:", user[0]);
-    return NextResponse.json(user[0]);
+    return NextResponse.json({
+      id: user.id,
+      name: user.user_metadata?.name,
+      email: user.email,
+      user_metadata: user.user_metadata,
+      app_metadata: user.app_metadata,
+    });
   } catch (error) {
-    console.error("Profile API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -66,46 +32,29 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+    if (!accessToken) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-
-    // Get valid session
-    const session = await db
-      .select()
-      .from(sessions)
-      .where(
-        and(eq(sessions.id, sessionId), gt(sessions.expiresAt, new Date()))
-      )
-      .limit(1);
-
-    if (!session || session.length === 0) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    const body = await request.json();
-    const { name } = body;
-
+    const { name } = await request.json();
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
-
-    const updatedUser = await db
-      .update(users)
-      .set({ name })
-      .where(eq(users.id, session[0].userId))
-      .returning();
-
-    if (!updatedUser || updatedUser.length === 0) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    const authService = new SupabaseAuthService();
+    // Update user metadata (name)
+    const client = authService.createClientWithToken(accessToken);
+    const { data, error } = await client.auth.updateUser({ data: { name } });
+    if (error || !data.user) {
+      return NextResponse.json({ error: error?.message || "Failed to update user" }, { status: 400 });
     }
-
-    const { password: _, ...userWithoutPassword } = updatedUser[0];
-    return NextResponse.json(userWithoutPassword);
+    return NextResponse.json({
+      id: data.user.id,
+      name: data.user.user_metadata?.name,
+      email: data.user.email,
+      user_metadata: data.user.user_metadata,
+      app_metadata: data.user.app_metadata,
+    });
   } catch (error) {
-    console.error("Profile update error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

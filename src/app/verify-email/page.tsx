@@ -5,12 +5,23 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RootLayout } from "@/components/layout/RootLayout";
 
-function VerifyEmailContent() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+function getAccessTokenFromHash() {
+  if (typeof window === "undefined") return null;
+  const hash = window.location.hash.substring(1); // remove the '#'
+  const params = new URLSearchParams(hash);
+  return params.get("access_token");
+}
 
+function VerifyEmailContent() {
+  const [token, setToken] = useState<string | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState<string>("Verifying your email...");
+
+  useEffect(() => {
+    // Only use Supabase flow: extract access_token from hash
+    const t = getAccessTokenFromHash();
+    setToken(t);
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -18,26 +29,10 @@ function VerifyEmailContent() {
       setMessage("Verification token is missing or invalid.");
       return;
     }
-
-    const verifyEmail = async () => {
-      try {
-        const response = await fetch(`/api/auth/verify-email?token=${token}`);
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to verify email.");
-        }
-
-        setStatus("success");
-        setMessage(data.message || "Email verified successfully!");
-      } catch (error) {
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "An unexpected error occurred.");
-      } 
-    };
-
-    verifyEmail();
-  }, [token]); // Depend on token
+    // If we have a token, just show success (Supabase handles verification)
+    setStatus("success");
+    setMessage("Your email has been verified! You can now log in.");
+  }, [token]);
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -51,7 +46,6 @@ function VerifyEmailContent() {
         <div className="mt-8 space-y-6">
           {status === "loading" && (
             <p className="text-gray-600">{message}</p>
-            // Add a spinner maybe?
           )}
           {status === "success" && (
             <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -68,7 +62,6 @@ function VerifyEmailContent() {
           {status === "error" && (
              <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                 <p>{message}</p>
-                {/* Optionally add a link to request a new verification email */}
              </div>
           )}
         </div>

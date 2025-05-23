@@ -1,65 +1,27 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { db } from "@/lib/db";
-import { sessions, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { SupabaseAuthService } from "@/lib/services/supabase-auth-service";
 
 export async function GET() {
   try {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+    if (!accessToken) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    // Get the session and user data
-    const [session] = await db
-      .select({
-        id: sessions.id,
-        userId: sessions.userId,
-      })
-      .from(sessions)
-      .where(eq(sessions.id, sessionId));
-
-    if (!session) {
-      // Session not found, clear the cookie
-      const response = NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-      response.cookies.delete("sessionId");
-      return response;
-    }
-
-    // Get user details
-    const [user] = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-      })
-      .from(users)
-      .where(eq(users.id, session.userId));
-
+    const authService = new SupabaseAuthService();
+    const user = await authService.getUserByAccessToken(accessToken);
     if (!user) {
-      // User not found, clear the session
-      await db.delete(sessions).where(eq(sessions.id, sessionId));
-      const response = NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
-      response.cookies.delete("sessionId");
-      return response;
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
     return NextResponse.json({
       id: user.id,
-      name: user.name,
+      name: user.user_metadata?.name,
       email: user.email,
+      user_metadata: user.user_metadata,
+      app_metadata: user.app_metadata,
     });
   } catch (error) {
-    console.error("Auth check error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

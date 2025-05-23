@@ -6,6 +6,8 @@ import Cookies from "js-cookie";
 import { CMSUser } from "@/types/cms";
 import { Product } from "@/types/product";
 import CMSLayout from "@/components/cms/CMSLayout";
+import { ImageUpload } from "@/components/forms/ImageUpload";
+import { ImageUploadResult } from "@/lib/services/image-service";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -20,6 +22,10 @@ export default function ProductsPage() {
     price: "",
     inventory: "",
     imageUrl: "",
+    imageKey: "",
+    imageWidth: 0,
+    imageHeight: 0,
+    imageFormat: "",
     isHighlighted: false,
   });
 
@@ -48,6 +54,28 @@ export default function ProductsPage() {
     }
   };
 
+  const handleImageUploaded = (result: ImageUploadResult) => {
+    setNewProduct(prev => ({
+      ...prev,
+      imageUrl: result.url,
+      imageKey: result.key,
+      imageWidth: result.width,
+      imageHeight: result.height,
+      imageFormat: result.format,
+    }));
+  };
+
+  const handleImageDeleted = () => {
+    setNewProduct(prev => ({
+      ...prev,
+      imageUrl: "",
+      imageKey: "",
+      imageWidth: 0,
+      imageHeight: 0,
+      imageFormat: "",
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -55,6 +83,7 @@ export default function ProductsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${Cookies.get('cms_token')}`
         },
         body: JSON.stringify({
           ...newProduct,
@@ -72,6 +101,10 @@ export default function ProductsPage() {
           price: "",
           inventory: "",
           imageUrl: "",
+          imageKey: "",
+          imageWidth: 0,
+          imageHeight: 0,
+          imageFormat: "",
           isHighlighted: false,
         });
         fetchProducts();
@@ -79,6 +112,30 @@ export default function ProductsPage() {
     } catch (error) {
       console.error("Error adding product:", error);
     }
+  };
+
+  const handleEditImageUploaded = (result: ImageUploadResult) => {
+    if (!editingProduct) return;
+    setEditingProduct(prev => ({
+      ...prev!,
+      imageUrl: result.url,
+      imageKey: result.key,
+      imageWidth: result.width,
+      imageHeight: result.height,
+      imageFormat: result.format,
+    }));
+  };
+
+  const handleEditImageDeleted = () => {
+    if (!editingProduct) return;
+    setEditingProduct(prev => ({
+      ...prev!,
+      imageUrl: "",
+      imageKey: "",
+      imageWidth: 0,
+      imageHeight: 0,
+      imageFormat: "",
+    }));
   };
 
   const handleEdit = async (e: React.FormEvent) => {
@@ -233,24 +290,13 @@ export default function ProductsPage() {
                 required
               />
             </div>
-            <div>
-              <label
-                htmlFor="imageUrl"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Image URL
-              </label>
-              <input
-                type="text"
-                id="imageUrl"
-                value={newProduct.imageUrl}
-                onChange={(e) =>
-                  setNewProduct({ ...newProduct, imageUrl: e.target.value })
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 py-2 bg-white text-gray-900"
-                required
-              />
-            </div>
+            <ImageUpload
+              onImageUploaded={handleImageUploaded}
+              onImageDeleted={handleImageDeleted}
+              productId="new"
+              existingImages={newProduct.imageUrl ? [{ url: newProduct.imageUrl, key: newProduct.imageKey }] : []}
+              supabaseToken={Cookies.get('cms_token')}
+            />
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -380,27 +426,13 @@ export default function ProductsPage() {
                         required
                       />
                     </div>
-                    <div>
-                      <label
-                        htmlFor={`imageUrl-${product.id}`}
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Image URL
-                      </label>
-                      <input
-                        type="text"
-                        id={`imageUrl-${product.id}`}
-                        value={editingProduct.imageUrl}
-                        onChange={(e) =>
-                          setEditingProduct({
-                            ...editingProduct,
-                            imageUrl: e.target.value,
-                          })
-                        }
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-10 px-3 py-2 bg-white text-gray-900"
-                        required
-                      />
-                    </div>
+                    <ImageUpload
+                      onImageUploaded={handleEditImageUploaded}
+                      onImageDeleted={handleEditImageDeleted}
+                      productId={editingProduct.id.toString()}
+                      existingImages={editingProduct.imageUrl && editingProduct.imageKey ? [{ url: editingProduct.imageUrl, key: editingProduct.imageKey }] : []}
+                      supabaseToken={Cookies.get('cms_token')}
+                    />
                     <div className="flex items-center">
                       <input
                         type="checkbox"

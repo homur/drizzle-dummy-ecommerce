@@ -53,13 +53,10 @@ Create a `.env` file in the root directory with the following variables:
 DATABASE_URL=your_database_url
 
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# NextAuth
-NEXTAUTH_SECRET=your_nextauth_secret
-NEXTAUTH_URL=http://localhost:3000
+
 
 # Other
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -127,11 +124,19 @@ The application uses the following main tables:
 
 ## Image Handling
 
-Images are stored in Supabase Storage with the following structure:
-- Product images are stored in the `products` bucket
-- Each product can have multiple images
-- Images are optimized and served through Supabase's CDN
-- Next.js Image component is used for optimized delivery
+Images are stored in Supabase Storage with the following configuration:
+- Bucket name: `products`
+- File size limit: 1MB
+- Allowed file types: Images only (image/*)
+- Storage structure:
+  - Each product can have multiple images
+  - Images are stored in the `products` bucket
+  - URLs are generated automatically by Supabase
+- Image optimization:
+  - Images are served through Supabase's CDN
+  - Next.js Image component is used for optimized delivery
+  - Automatic responsive image sizing
+  - Lazy loading for better performance
 
 ## Acknowledgments
 

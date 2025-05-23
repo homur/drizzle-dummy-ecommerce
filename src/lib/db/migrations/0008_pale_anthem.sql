@@ -1,1 +1,0 @@
-ALTER TABLE "messages" ADD COLUMN "type" text DEFAULT 'system' NOT NULL;

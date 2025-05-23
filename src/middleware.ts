@@ -31,27 +31,27 @@ export async function middleware(request: NextRequest) {
     return pathname.startsWith(path);
   });
 
-  // Get the session ID from the cookie
-  const sessionId = request.cookies.get("sessionId")?.value;
-  console.log("Session ID present:", !!sessionId);
+  // Get the Supabase access token from the cookie
+  const accessToken = request.cookies.get("sb-access-token")?.value;
+  console.log("Access token present:", !!accessToken);
 
-  // If there's a session ID but we're on a public path, clear it
-  if (isPublicPath && sessionId) {
-    console.log("Clearing session cookie on public path");
+  // If there's an access token but we're on a public path, clear it
+  if (isPublicPath && accessToken) {
+    console.log("Clearing access token cookie on public path");
     const response = NextResponse.redirect(new URL("/", request.url));
-    response.cookies.delete("sessionId");
+    response.cookies.delete("sb-access-token");
     return response;
   }
 
-  // If there's no session ID and we're on a protected path, redirect to login
-  if (isProtectedPath && !sessionId) {
-    console.log("No session ID, redirecting to login");
+  // If there's no access token and we're on a protected path, redirect to login
+  if (isProtectedPath && !accessToken) {
+    console.log("No access token, redirecting to login");
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If we have a session ID, let the API routes handle validation
+  // If we have an access token, let the API routes handle validation
   console.log("Middleware allowing access to:", pathname);
   return NextResponse.next();
 }

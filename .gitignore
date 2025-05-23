@@ -52,6 +52,8 @@ logs
 .eslintcache
 .stylelintcache
 
+# Cursor
+.cursor
 # Drizzle specific
 # DO NOT IGNORE migration files - they should be committed
 # /src/lib/db/migrations/

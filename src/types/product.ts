@@ -5,6 +5,10 @@ export interface Product {
   price: number;
   inventory: number;
   imageUrl: string;
+  imageKey?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageFormat?: string;
   isHighlighted: boolean;
   createdAt: Date;
   updatedAt: Date;

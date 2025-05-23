@@ -1,28 +1,22 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { sessions } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { SupabaseAuthService } from "@/lib/services/supabase-auth-service";
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (sessionId) {
-      // Delete the session from the database
-      await db.delete(sessions).where(eq(sessions.id, sessionId));
+    const accessToken = cookieStore.get("sb-access-token")?.value;
+    if (accessToken) {
+      const authService = new SupabaseAuthService();
+      // Optionally, you can call signOut, but Supabase signOut is mostly for client-side
+      // await authService.signOut();
     }
-
     // Create response
     const response = NextResponse.json({ success: true });
-
-    // Delete the session cookie
-    response.cookies.delete("sessionId");
-
+    // Delete the access token cookie
+    response.cookies.delete("sb-access-token");
     return response;
   } catch (error) {
-    console.error("Logout error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
